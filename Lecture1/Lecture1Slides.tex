@@ -1,0 +1,254 @@
+\documentclass[10pt]{beamer}
+
+  % Math Packages
+  \usepackage{algorithmic}
+  \usepackage{amsmath}
+  \usepackage{amsthm}
+  \usepackage{mathtools}
+
+  % Graphics Packages
+  \usepackage{graphicx}
+  \usepackage[export]{adjustbox}
+
+  % Other packages
+  \usepackage{color}
+  \usepackage{listings}
+
+  % Theme Settings
+  \usetheme{metropolis}
+  \usefonttheme{professionalfonts}
+
+\title{Introduction and Tools 1}
+\author{Chase Coleman}
+\institute{NYU Stern}
+\date[]{\today}
+
+\begin{document}
+
+% Title Slide
+\begin{frame}
+  \thispagestyle{empty}
+  \titlepage
+\end{frame}
+
+
+% --------------------------------------- %
+% Introduction
+% --------------------------------------- %
+\section{Introduction}
+
+\begin{frame} \frametitle{Welcome}
+
+  Thanks for being here.
+
+  Introduce yourself:
+  \begin{itemize}
+    \item Name
+    \item Year of PhD
+    \item Programming langauge you plan to use
+    \item Answer the question you wish I asked you here
+  \end{itemize}
+\end{frame}
+
+
+% --------------------------------------- %
+% Using and understanding your computer
+% --------------------------------------- %
+\section{Using and Understanding Your Computer}
+
+\begin{frame} \frametitle{Intro to Software Engineering}
+  What is ``Software Engineering?''
+
+  \visible<1->{``The systematic application of scientific and technological knowledge, methods, and experience to the design, implementation, testing, and documentation of software.''}
+
+  What does this mean?
+
+  \visible<2->{Minimize the probability of having a bug and ensure other can understand your code... ``Always code as if the guy who ends up maintaining your code will be a violent pyschopath who knows where you live.''}
+
+\end{frame}
+
+\begin{frame} \frametitle{Simple Rules to Live By}
+  These are in no way exhaustive, but are a start
+  \begin{itemize}
+    \item Don't Repeat Yourself: Writing \lstinline{(c^(1 - gamma) - 1) / (1 - gamma)} repeatedly makes it likely you will make a mistake... Also a pain to make sure you change all instances if you use a different utility function.
+    \item Use whitespace wisely.
+    \item Comment and document your code carefully.
+    \item More recommendations
+  \end{itemize}
+\end{frame}
+
+\begin{frame} \frametitle{Floating Point Numbers}
+  Computer reads numbers differently than you.
+
+  A 16 bit floating point number: $\underbrace{0}_{\text{Sign}} \underbrace{01101}_{\text{Exponent}} \underbrace{0101010101}_{\text{Mantissa}}$
+
+  \begin{align*}
+    0 01101 0101010101 &\rightarrow -1^{\text{Sign}} \left(1 + \sum_{n=1}^{10} \text{Mantissa}_n 2^{-n} \right) 2^{\text{Exponent - Bias}} \\
+                       &\rightarrow 1 (1.3330078125) 2^{13 - 15} = 0.33325
+  \end{align*}
+
+  Occasionally useful to understand this fact.
+\end{frame}
+
+\begin{frame}[label=ColRowMajor] \frametitle{Column vs Row Major}
+
+  Matrices (and higher dimensional) arrays are stored as sequential elements of memory. The order in which they are stored determines whether a language is column or row major.
+
+  For example, consider the following matrix: $\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}$
+  \begin{itemize}
+    \item A row major language would store this as: \lstinline{1, 2, 3, 4, 5, 6}
+    \item A column major language would store this as: \lstinline{1, 4, 2, 5, 3, 6}
+  \end{itemize}
+
+  This has performance implications (More info \hyperlink{ColRowMajor_Supp}{\beamerbutton{here}})
+\end{frame}
+
+\begin{frame} \frametitle{Vectorization}
+
+  Sometimes useful to recognize that loops can be avoided by using vectorized functions.
+
+\end{frame}
+
+
+% --------------------------------------- %
+% Root Finding and Optimization
+% --------------------------------------- %
+\section{Root Finding and Optimization}
+
+\subsection{Root Finding}
+
+\begin{frame} \frametitle{Bisection: Simplest Root Finding Algorithm}
+
+  Consider a continuous function $f : \mathbb{R} \rightarrow \mathbb{R}$ and $a, b \in \mathbb{R}$ such that $f(a) f(b) < 0$. Then Intermediate Value Theorem states, $\exists c \in (a, b)$ such that $f(c)  = 0$.
+
+  \begin{algorithmic}
+    \REQUIRE $f(a) f(b) < 0$
+
+    \STATE $fc \leftarrow 10$
+
+    \WHILE{$|b - a| > tol$}
+      \STATE $c \leftarrow (a+b)/2$
+      \STATE $fc \leftarrow f(c)$
+
+      \IF{$fa*fc < 0$}
+        \STATE $b \leftarrow c$
+      \ELSE
+        \STATE $a \leftarrow c$
+      \ENDIF
+    \ENDWHILE
+
+  \end{algorithmic}
+
+\end{frame}
+
+\begin{frame} \frametitle{Bisection}
+  Simplest root finding algorithm
+  \begin{itemize}
+    \item Pros: Relatively fast, simple, guaranteed to find a solution given certain conditions
+    \item Cons: Uses little info about function, not natural to extend to higher than 1 dimension
+  \end{itemize}
+\end{frame}
+
+\begin{frame} \frametitle{Newton's Method}
+
+  Natural follow up to Bisection is Newton's Method which uses information about derivatives
+
+  \begin{algorithmic}
+    \STATE $fk \rightarrow f(x_k)$
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+      \STATE $x_{k+1} \rightarrow x_k - f(x_k)/f'(x_k)$
+    \ENDWHILE
+
+    \IF{$|f(x_k)| < tol_f$}
+      \STATE Success
+    \ELSE
+      \STATE Failure
+    \ENDIF
+
+  \end{algorithmic}
+
+\end{frame}
+
+\begin{frame} \frametitle{Newton's Method}
+  \begin{itemize}
+    \item Pros: Relatively fast, simple, guaranteed to find a solution given certain conditions
+    \item Cons: Uses little info about function, not natural to extend to higher than 1 dimension
+  \end{itemize}
+\end{frame}
+
+\begin{frame} \frametitle{Secant Method}
+  A particular case of Newton's Method where we approximate $f'(x)$ by taking secant line between $f(x_{k-1})$ and $f(x_k)$
+\end{frame}
+
+\begin{frame} \frametitle{Gauss-Jacobi and Gauss-Seidel}
+  Simple extension to multiple dimensions
+\end{frame}
+
+\begin{frame} \frametitle{Multi-dimesional Newton}
+\end{frame}
+
+\begin{frame} \frametitle{Multi-dimesional Secant (aka Broyden)}
+\end{frame}
+
+\subsection{Optimization}
+
+\begin{frame} \frametitle{Grid Search}
+  ``Premature optimization is the root of all evil''
+\end{frame}
+
+\begin{frame} \frametitle{Nelder-Mead}
+
+\end{frame}
+
+\begin{frame} \frametitle{Newton's Method (Optimization)}
+
+  Like finding the root of $f'(x)$
+
+\end{frame}
+
+\begin{frame} \frametitle{Hill Climbing}
+
+\end{frame}
+
+\begin{frame} \frametitle{BFGS Method}
+
+\end{frame}
+
+\begin{frame} \frametitle{Constrained: Penalty Function Methods}
+
+\end{frame}
+
+\begin{frame} \frametitle{Constrained: Sequential Quadratic}
+
+\end{frame}
+
+% \begin{frame} \frametitle{Paths of Debt and Labor in Simple Model}
+%   \begin{figure}
+%     \includegraphics[width=\textwidth,right]{../images/SimpleDebtLabor.pdf}
+%     \caption{Paths of Debt and Labor}
+%   \end{figure}
+% \end{frame}
+
+\appendix
+
+\begin{frame}[label=ColRowMajor_Supp] \frametitle{Column vs Row Major: Supplement}
+  Computers have different layers of memory storage. In order to apply operations, data must be moved to a small piece of memory called L1 memory. L1 memory lives directly on the processor and is very fast.
+
+  As computers have evolved, they have gotten better at ``guessing'' what data you will need next. Instead of moving just a single element of an array, the processor will retrieve a small block of consecutive elements.
+
+  As you iterate along an array, this means the computer will need to spend less time passing memory between RAM and L1 and can spend more time doing actual operations.
+
+  Additional info: \href{https://www.extremetech.com/extreme/188776-how-l1-and-l2-cpu-caches-work-and-why-theyre-an-essential-part-of-modern-chips}{online}
+
+  \hyperlink{ColRowMajor}{\beamerbutton{Back}} to Column vs Row Major
+\end{frame}
+
+\begin{frame} \frametitle{References}
+  \begin{itemize}
+    \item Numerical Methods in Economics by Kenneth L Judd
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
