@@ -7,4 +7,8 @@
 *.out
 *.snm
 *.toc
+*.xdv
+
+# PGF Image files
+*.pgf
 

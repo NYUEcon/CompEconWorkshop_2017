@@ -7,16 +7,22 @@
   \usepackage{mathtools}
 
   % Graphics Packages
-  \usepackage{graphicx}
   \usepackage[export]{adjustbox}
+  \usepackage{graphicx}
+  \usepackage{pgf}
 
   % Other packages
   \usepackage{color}
+  \usepackage{csquotes}  % Adds ability to use display quotes
   \usepackage{listings}
 
   % Theme Settings
   \usetheme{metropolis}
   \usefonttheme{professionalfonts}
+
+  % Special commands
+  \DeclareMathOperator*{\argmin}{arg\,min}
+  \DeclareMathOperator*{\argmax}{arg\,max}
 
 \title{Introduction and Tools 1}
 \author{Chase Coleman}
@@ -50,11 +56,18 @@
   \end{itemize}
 \end{frame}
 
+% --------------------------------------- %
+% Writing Good Code
+% --------------------------------------- %
+\section{Writing Good Code}
 
-% --------------------------------------- %
-% Using and understanding your computer
-% --------------------------------------- %
-\section{Using and Understanding Your Computer}
+\begin{frame} \frametitle{An Economics Crisis}
+
+  \begin{displayquote}
+    I think we are in the middle of a simmering crisis in economics\dots I think the first-order issue with economists and programming languages is not (necessarily) performance, but (1) correctness and (2) software engineering\dots Have someone with a published numerical paper send you their code, and tell me if you can tell whether it implements the model or not\dots The software engineering problem in economics needs to be addressed with better training and helping people understand tools like version control, continuous integration, unit testing, the benefits of tested libraries, etc.
+  \end{displayquote}
+
+\end{frame}
 
 \begin{frame} \frametitle{Intro to Software Engineering}
   What is ``Software Engineering?''
@@ -63,19 +76,33 @@
 
   What does this mean?
 
-  \visible<2->{Minimize the probability of having a bug and ensure other can understand your code... ``Always code as if the guy who ends up maintaining your code will be a violent pyschopath who knows where you live.''}
+  \visible<2->{Write code to minimize the probability of having a bug and so that others can understand your code without excessive effort.
+  \begin{displayquote}
+    Always code as if the guy who ends up maintaining your code will be a violent pyschopath who knows where you live.
+  \end{displayquote}
+  }
 
 \end{frame}
 
 \begin{frame} \frametitle{Simple Rules to Live By}
   These are in no way exhaustive, but are a start
   \begin{itemize}
-    \item Don't Repeat Yourself: Writing \lstinline{(c^(1 - gamma) - 1) / (1 - gamma)} repeatedly makes it likely you will make a mistake... Also a pain to make sure you change all instances if you use a different utility function.
-    \item Use whitespace wisely.
+    \item Don't Repeat Yourself
+    \begin{itemize}
+      \item Use functions rather than writing things repeatedly
+      \item Writing \lstinline{(c^(1 - gamma) - 1) / (1 - gamma)} repeatedly makes it likely you will eventually make a mistake
+      \item It is a pain to make sure you change all instances if you decide to use a different utility function.
+    \end{itemize}
+    \item Write test cases to ensure that various functions you use do what you think they do.
+    \item Use whitespace wisely (ALWAYS HAVE SPACE AFTER COMMA).
     \item Comment and document your code carefully.
-    \item More recommendations
   \end{itemize}
 \end{frame}
+
+% --------------------------------------- %
+% Understanding the Basics
+% --------------------------------------- %
+\section{Understanding the Basics}
 
 \begin{frame} \frametitle{Floating Point Numbers}
   Computer reads numbers differently than you.
@@ -88,6 +115,31 @@
   \end{align*}
 
   Occasionally useful to understand this fact.
+
+  \visible<2->{For example, since arithmetic is not necessarily commutative for floating points (because of accuracy limitations) checking exact equality between floating points is a \textit{bad} idea\dots}
+  % Example: 10 * 0.07 vs 10/5000 * (5000 * 0.07)
+
+\end{frame}
+
+\begin{frame} \frametitle{Ill Conditioned Matrices}
+
+Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin{bmatrix} 8 \\ 8.00001 \end{bmatrix}$, and $b_2 = \begin{bmatrix} 8 \\ 8.00002 \end{bmatrix}$
+
+  \begin{itemize}
+    \item Solution to $A x = b_1$ is $\begin{bmatrix} 1 & 1 \end{bmatrix}$
+    \item Solution to $A x = b_2$ is $\begin{bmatrix} 2 & -2 \end{bmatrix}$
+  \end{itemize}
+
+  An ill conditioned matrix is one that is close to singular. This causes, for the equation $A x = b$, that small changes in $b$ lead to large changes in $x$.
+
+\end{frame}
+
+\begin{frame} \frametitle{Dealing with Ill Conditioned Matrices}
+  Can check whether a matrix is ill conditioned by looking at its condition number:
+
+  $$\kappa(A) = \sigma_{\text{max}}(A) / \sigma_{\text{min}}(A)$$
+
+  If a matrix is actually ill-conditioned ($\kappa(A)$ large), there is not much you can do except try to make sure $b$ is calculated as closely as possible.
 \end{frame}
 
 \begin{frame}[label=ColRowMajor] \frametitle{Column vs Row Major}
@@ -103,9 +155,38 @@
   This has performance implications (More info \hyperlink{ColRowMajor_Supp}{\beamerbutton{here}})
 \end{frame}
 
+\begin{frame} \frametitle{Curse of Dimensionality}
+  Often need to approximate functions $f: \mathbb{R}^d \rightarrow \mathbb{R}$
+
+  If want to use $n$ points to approximate function in each dimension using a tensor grid of points then have a total of $n^d$ points.
+
+  \begin{figure}
+    \centering
+    \scalebox{0.5}{\input{images/curseofdimensionality.pgf}}
+  \end{figure}
+
+\end{frame}
+
+\begin{frame} \frametitle{Curse of Dimensionality}
+
+  Most obvious way to slow down the curse of dimensionality is to move away from tensor grids!
+
+  \begin{figure}
+    \centering
+    \scalebox{0.5}{\input{images/smolyakrandomtensor.pgf}}
+  \end{figure}
+
+\end{frame}
+
 \begin{frame} \frametitle{Vectorization}
 
-  Sometimes useful to recognize that loops can be avoided by using vectorized functions.
+  Sometimes useful to recognize that loops can be avoided by using vectorized operations.
+
+  For example, imagine a Markov chain, $(S_t, P, \pi_0)$, for endowments.
+
+  $$V(s_t) = u(s_t) + \beta E \left[ V(s_{t+1}) | s_t \right]$$
+
+  Recognize that $\beta E[V(s_{t+1}) | s_t]$ is just $\beta P \vec{V}$ thus $\vec{V} = (I - \beta P) u(\vec{s})$
 
 \end{frame}
 
@@ -117,9 +198,21 @@
 
 \subsection{Root Finding}
 
+\begin{frame} \frametitle{Goal of Root Finding}
+
+  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^n$, find $x \in \mathbb{R}^n$ such that $f(x) = 0$
+
+  Whenever we search for prices in a general equilibrium model, we are seeking to clear markets \textemdash{} i.e.\ find prices such that the excess demand functions are zero.
+
+  In algorithms presented, the stopping point will be determined by how close $x_{k+1}$ and $x_k$ are, but the algorithm is only a success if ultimately $f(x_{k+1}) \approx 0$. For space constraints, I have left this function convergence check out of the algorithms.
+
+\end{frame}
+
 \begin{frame} \frametitle{Bisection: Simplest Root Finding Algorithm}
 
   Consider a continuous function $f : \mathbb{R} \rightarrow \mathbb{R}$ and $a, b \in \mathbb{R}$ such that $f(a) f(b) < 0$. Then Intermediate Value Theorem states, $\exists c \in (a, b)$ such that $f(c)  = 0$.
+
+  \vspace{0.3cm}
 
   \begin{algorithmic}
     \REQUIRE $f(a) f(b) < 0$
@@ -151,20 +244,16 @@
 
 \begin{frame} \frametitle{Newton's Method}
 
-  Natural follow up to Bisection is Newton's Method which uses information about derivatives
+  Natural follow up to Bisection is Newton's Method which uses information about derivatives by linearizing and find the zero of the linearized version.
+
+  $$f(x_k) + f'(x_k) (x_{k+1} - x_{k}) = 0$$
+
+  \vspace{0.5cm}
 
   \begin{algorithmic}
-    \STATE $fk \rightarrow f(x_k)$
-
     \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
       \STATE $x_{k+1} \rightarrow x_k - f(x_k)/f'(x_k)$
     \ENDWHILE
-
-    \IF{$|f(x_k)| < tol_f$}
-      \STATE Success
-    \ELSE
-      \STATE Failure
-    \ENDIF
 
   \end{algorithmic}
 
@@ -172,38 +261,143 @@
 
 \begin{frame} \frametitle{Newton's Method}
   \begin{itemize}
-    \item Pros: Relatively fast, simple, guaranteed to find a solution given certain conditions
-    \item Cons: Uses little info about function, not natural to extend to higher than 1 dimension
+    \item Pros: Even faster than bisection, simple, uses information about derivative
+    \item Cons: Does not always find a solution, requires ability to compute derivative
   \end{itemize}
 \end{frame}
 
 \begin{frame} \frametitle{Secant Method}
-  A particular case of Newton's Method where we approximate $f'(x)$ by taking secant line between $f(x_{k-1})$ and $f(x_k)$
+  Secand method is related to Newton's Method, but, rather than use the analytical derivative, it approximates $f'(x)$ by taking secant line between $f(x_{k-1})$ and $f(x_k)$
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE $x_{k+1} \rightarrow x_k - \frac{f(x_k) (x_k - x_{k-1})}{f(x_k) - f(x_{k-1})}$
+    \ENDWHILE
+
+  \end{algorithmic}
+
 \end{frame}
 
-\begin{frame} \frametitle{Gauss-Jacobi and Gauss-Seidel}
-  Simple extension to multiple dimensions
+\begin{frame} \frametitle{Secant Method}
+  \begin{itemize}
+    \item Pros: Similar in speed to Newton's method \textemdash{} The relative speed depends on how much time evaluating the derivative takes vs possibly slower convergence because not using actual derivative, sometimes useful not to need exact derivative
+    \item Cons: Not guaranteed to converge, doesn't use analytical derivative
+  \end{itemize}
 \end{frame}
 
 \begin{frame} \frametitle{Multi-dimesional Newton}
+
+  Use Jacobian rather than derivative
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE $A_k = J(x^k)$
+    \STATE Solve $A_k s_k = - f(x^k)$ for $s_k$
+    \STATE $x_{k+1} \rightarrow x_k + s_k$
+    \ENDWHILE
+
+  \end{algorithmic}
+
 \end{frame}
 
 \begin{frame} \frametitle{Multi-dimesional Secant (aka Broyden)}
+
+  Must determine how to approximate Jacobian?
+
+  One way\footnote{This ensure that $A_{k+1} q = A_k q$ whenever $q^T s_k = 0$ (predicted change in directions orthogonal to $s_k$ with new Jacobian matrix are equal to predicted change in that direction with old Jacobian matrix)}
+: $A_{k+1} = A_k + \frac{(y_k - A_k s_k) s_k^T}{s_k^T s_k}$
+
+  \vspace{0.3cm}
+
+  \begin{algorithmic}
+
+    \STATE $A_0 = I$
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE Solve $A_k s_k = - f(x^k)$ for $s_k$
+    \STATE $x_{k+1} \rightarrow x_k + s_k$
+    \STATE $y_k = f(x^{k+1}) - f(x^k)$
+    \STATE $A_{k+1} = A_k + \frac{(y_k - A_k s_k) s_k^T}{s_k^T s_k}$
+    \ENDWHILE
+
+  \end{algorithmic}
+
+\end{frame}
+
+\begin{frame} \frametitle{Gauss-Jacobi and Gauss-Seidel}
+
+  Both of these algorithms simplify a $n$-dimensional problem to a 1-dimensional problem. Solve for $x_i$ such that $f(x_i, x_{-i}) = 0$. However, the approach is slightly different.
+
+  \begin{itemize}
+    \item \textbf{Gauss-Jacobi}: Find $x^{k+1}$ such that its elements satisfy following equations
+    \begin{align*}
+      f^1(x_1^{k+1}, x_2^k, \dots, x_n^k) &= 0 \\
+      f^2(x_1^{k}, x_2^{k+1}, \dots, x_n^k) &= 0 \\
+      \dots
+    \end{align*}
+    \item \textbf{Gauss-Seidel}: Find $x^{k+1}$ such that its elements satisfy following equations
+    \begin{align*}
+      f^1(x_1^{k+1}, x_2^k, \dots, x_n^k) &= 0 \\
+      f^2(x_1^{k+1}, x_2^{k+1}, \dots, x_n^k) &= 0 \\
+      \dots
+    \end{align*}
+  \end{itemize}
+
 \end{frame}
 
 \subsection{Optimization}
 
-\begin{frame} \frametitle{Grid Search}
-  ``Premature optimization is the root of all evil''
+\begin{frame} \frametitle{Goal of Optimization}
+
+  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}$, find $x^* \in \mathbb{R}^n$ such that $x^* \in \argmax_x f(x)$
+
+  Economic models typically have various agents who are each solving a maximization problem \textemdash{} For example, consumers choose consumption and savings in order to maximize their value today (flow + continuation).
+
 \end{frame}
 
-\begin{frame} \frametitle{Nelder-Mead}
+\begin{frame} \frametitle{Grid Search}
+  ``Premature optimization is the root of all evil'' \textemdash{Donald Knuth}
+
+  \vspace{0.5cm}
+
+  A very simple way to get an idea of where the maximum of a function is, is to simply compare on a discrete number of points.
+
+  \vspace{0.5cm}
+
+  This approach is often more effective than people give it credit for.
+
+\end{frame}
+
+\begin{frame} \frametitle{Golden-Section Search}
+
+\end{frame}
+
+\begin{frame} \frametitle{Nelder-Mead (Simplex Method)}
 
 \end{frame}
 
 \begin{frame} \frametitle{Newton's Method (Optimization)}
 
-  Like finding the root of $f'(x)$
+  Like finding the root of $f'(x)$\dots
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE Compute gradient, $\nabla f (x^k)$
+    \STATE Compute Hessian, $H(x^k)$
+    \STATE Solve for $s^k$ in $H(x^k) s^k = -(\nabla f(x^k))^T $
+    \STATE $x^{k+1} \leftarrow x^k + s^k$
+    \ENDWHILE
+
+  \end{algorithmic}
 
 \end{frame}
 
