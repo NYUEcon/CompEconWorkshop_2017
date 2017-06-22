@@ -56,6 +56,19 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame} \frametitle{Organizational Stuff}
+  Next lecture will be Monday the 26th
+
+  \vspace{0.5cm}
+
+  All slides and practice questions will be online at \url{https://github.com/NYUEcon/CompEconWorkshop_2017}. We will try to provide answers to some of the practice questions we assign there as well.
+
+  \vspace{0.5cm}
+
+  Questions?
+
+\end{frame}
+
 % --------------------------------------- %
 % Writing Good Code
 % --------------------------------------- %
@@ -76,7 +89,7 @@
 
   What does this mean?
 
-  \visible<2->{Write code to minimize the probability of having a bug and so that others can understand your code without excessive effort.
+  \visible<2->{Write code to minimize the probability of having a bug and to ensure that others can understand your code without excessive effort\footnote{This can improve your citability}.
   \begin{displayquote}
     Always code as if the guy who ends up maintaining your code will be a violent pyschopath who knows where you live.
   \end{displayquote}
@@ -116,8 +129,9 @@
 
   Occasionally useful to understand this fact.
 
-  \visible<2->{For example, since arithmetic is not necessarily commutative for floating points (because of accuracy limitations) checking exact equality between floating points is a \textit{bad} idea\dots}
+  \visible<2->{For example, since computer arithmetic is not necessarily associative or commutative\footnote{See \url{http://www.walkingrandomly.com/?p=5380} for discussion} for floating points (because of accuracy limitations) checking exact equality between floating points is a \textit{bad} idea\dots}
   % Example: 10 * 0.07 vs 10/5000 * (5000 * 0.07)
+  %           0.1 + (0.2 + 0.3) == (0.1 + 0.2) + 0.3 => False
 
 \end{frame}
 
@@ -139,12 +153,12 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
   $$\kappa(A) = \sigma_{\text{max}}(A) / \sigma_{\text{min}}(A)$$
 
-  If a matrix is actually ill-conditioned ($\kappa(A)$ large), there is not much you can do except try to make sure $b$ is calculated as closely as possible.
+  If a matrix is actually ill-conditioned ($\kappa(A)$ large), there is not much you can do except try to make sure $b$ is calculated as precisely as possible.
 \end{frame}
 
 \begin{frame}[label=ColRowMajor] \frametitle{Column vs Row Major}
 
-  Matrices (and higher dimensional) arrays are stored as sequential elements of memory. The order in which they are stored determines whether a language is column or row major.
+  Matrices (and higher dimensional arrays) are stored as sequential elements of memory. The order in which they are stored determines whether a language is column or row major.
 
   For example, consider the following matrix: $\begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \end{bmatrix}$
   \begin{itemize}
@@ -200,11 +214,11 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
 \begin{frame} \frametitle{Goal of Root Finding}
 
-  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^n$, find $x \in \mathbb{R}^n$ such that $f(x) = 0$
+  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}^n$, find $x \in \mathbb{R}^n$ such that $f(x) = \vec{0}$
 
   Whenever we search for prices in a general equilibrium model, we are seeking to clear markets \textemdash{} i.e.\ find prices such that the excess demand functions are zero.
 
-  In algorithms presented, the stopping point will be determined by how close $x_{k+1}$ and $x_k$ are, but the algorithm is only a success if ultimately $f(x_{k+1}) \approx 0$. For space constraints, I have left this function convergence check out of the algorithms.
+  In algorithms presented, the stopping point will be determined by how close $x_{k+1}$ and $x_k$ are, but the algorithm is only a success if ultimately $f(x_{k+1}) \approx 0$. For space constraints, I have left this function convergence check out of the algorithm descriptions.
 
 \end{frame}
 
@@ -308,7 +322,7 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
 \begin{frame} \frametitle{Multi-dimesional Secant (aka Broyden)}
 
-  Must determine how to approximate Jacobian?
+  This is a multi-dimensional version of Secant method. We must determine how to approximate Jacobian.
 
   One way\footnote{This ensure that $A_{k+1} q = A_k q$ whenever $q^T s_k = 0$ (predicted change in directions orthogonal to $s_k$ with new Jacobian matrix are equal to predicted change in that direction with old Jacobian matrix)}
 : $A_{k+1} = A_k + \frac{(y_k - A_k s_k) s_k^T}{s_k^T s_k}$
@@ -355,9 +369,15 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
 \begin{frame} \frametitle{Goal of Optimization}
 
-  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}$, find $x^* \in \mathbb{R}^n$ such that $x^* \in \argmax_x f(x)$
+  Given a function $f: \mathbb{R}^n \rightarrow \mathbb{R}$, find $x^* \in \mathbb{R}^n$ such that $x^* \in \argmin_x f(x)$
+
+  \vspace{0.3cm}
 
   Economic models typically have various agents who are each solving a maximization problem \textemdash{} For example, consumers choose consumption and savings in order to maximize their value today (flow + continuation).
+
+  \vspace{0.3cm}
+
+  {\color{red} WARNING: All methods shown today are about converging to local extrema\dots This is often not problematic in economic problems because of ``nice'' properties, but not universally true.}
 
 \end{frame}
 
@@ -366,7 +386,7 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
   \vspace{0.5cm}
 
-  A very simple way to get an idea of where the maximum of a function is, is to simply compare on a discrete number of points.
+  A very simple way to get an idea of where the minimum of a function is, is to simply compare on a discrete number of points.
 
   \vspace{0.5cm}
 
@@ -376,15 +396,60 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
 \begin{frame} \frametitle{Golden-Section Search}
 
+  Member of a class of methods known as bracketing methods.
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \REQUIRE $a, b$
+
+    \STATE $c \leftarrow b - (b-a)/\phi$
+    \STATE $d \leftarrow a + (b-a)/\phi$
+
+    \WHILE{$|c - d| > tol_x$}
+
+    \IF{$f(c) < f(d)$}
+      \STATE $(b, fb) \leftarrow (d, fd)$
+    \ELSE
+      \STATE $(a, fa) \leftarrow (c, fc)$
+    \ENDIF
+
+    \STATE $c \leftarrow b - (b-a)/\phi$
+    \STATE $d \leftarrow a + (b-a)/\phi$
+
+    \ENDWHILE
+
+  \end{algorithmic}
+
 \end{frame}
 
 \begin{frame} \frametitle{Nelder-Mead (Simplex Method)}
+
+  Member of a class of methods known as polytope methods. The general idea\footnote{For a full description refer to \url{http://nbviewer.jupyter.org/github/QuantEcon/QuantEcon.notebooks/blob/master/chase_nelder_mead.ipynb}} is that you build a simplex and expand, shrink, move, and rotate the simplex until the distance between the points of the simplex are very small.
+
+\end{frame}
+
+\begin{frame} \frametitle{Gradient Descent}
+
+  The idea of gradient descent is to move in the steepest direction ``down the hill.'' Very effective in first few iterations, but can be slow as it gets near the minimum\dots
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x^{k+1} - x^{k}| > tol_x$}
+      \STATE $\gamma^k = \frac{(x^k - x^{k-1})^T (\nabla f(x^k) - \nabla f(x^{k-1}))}{||\nabla f(x^k) - \nabla f(x^{k-1})||^2}$
+      \STATE $x^{k+1} \leftarrow x^k - \gamma^k \nabla f(x^k)$
+    \ENDWHILE
+
+  \end{algorithmic}
 
 \end{frame}
 
 \begin{frame} \frametitle{Newton's Method (Optimization)}
 
-  Like finding the root of $f'(x)$\dots
+  Like finding the root of $f'(x)$\dots\ Similar in idea to gradient descent, but requires/uses additional information (Hessian) which overcomes the problem of when gradient descent gets slow.
 
   \vspace{0.5cm}
 
@@ -401,28 +466,72 @@ Consider $A = \begin{bmatrix} 2 & 6 \\ 2 & 6.00001 \end{bmatrix}$, $b_1 = \begin
 
 \end{frame}
 
-\begin{frame} \frametitle{Hill Climbing}
+\begin{frame} \frametitle{BFGS Method}
+
+  Similar to the ideas to gradient descent and Newton's method, but want to get bonuses of having information about Hessian without actually computing it. Approximation of Hessian is $B_k$.
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE $p_k$ as solution of $B_k p_k = - \nabla f(x_k)$
+    \STATE Perform line search to find good stepsize $\alpha_k$
+    \STATE $s_k \leftarrow \alpha_k p_k$
+    \STATE $x^{k+1} \leftarrow x^k + s_k$
+    \STATE $y_k = \nabla f(x^{k+1}) - \nabla f(x^k)$
+    \STATE $B_{k+1} = B_k + \frac{y_k y_k^T}{y_k^T s_k} - \frac{B_k s_k s_k^T B_k}{s_k^T B_k s_k}$
+    \ENDWHILE
+
+  \end{algorithmic}
 
 \end{frame}
 
-\begin{frame} \frametitle{BFGS Method}
+\begin{frame} \frametitle{Goal of Constrained Optimization}
+
+  Given functions $f: \mathbb{R}^n \rightarrow \mathbb{R}$, $g: \mathbb{R}^n \rightarrow \mathbb{R}^m$, and $h: \mathbb{R}^n \rightarrow \mathbb{R}^p$ solve
+  \begin{align*}
+    x^* &= \argmin_x f(x) \\
+        &\text{subject to } \\
+        g(x^*) &= 0 \\
+        h(x^*) &\leq 0
+    \end{align*}
 
 \end{frame}
 
 \begin{frame} \frametitle{Constrained: Penalty Function Methods}
 
+  One way to solve a constrained optimization problem is by just building the Lagrangian and using the theory in the Karush-Kuhn-Tucker conditions.
+
+  \vspace{0.5cm}
+
+  \begin{algorithmic}
+
+    \WHILE{$|x_{k+1} - x_{k}| > tol_x$}
+    \STATE Solve a particular unconstrained problem to get $x_{k+1}$
+    $$x_{k+1} \leftarrow \argmin_x f(x) + \frac{1}{2} P_k \left( \sum_i g_i(x)^2 + \sum_j \max \{0, h_j(x) \}^2 \right)$$
+    \STATE $P_{k+1} = \chi P_{k}$
+    \ENDWHILE
+
+  \end{algorithmic}
+
+  \vspace{0.5cm}
+
+  Why increase $P$ over time? (If too large then ill-conditioning can hurt accuracy)
+
 \end{frame}
 
 \begin{frame} \frametitle{Constrained: Sequential Quadratic}
 
-\end{frame}
+  Leverages the fact that problems with quadratic objectives and linear constraints are ``easy'' to solve. Instead of solving original problem, solve a sequence of Quadratic-Linear problems
 
-% \begin{frame} \frametitle{Paths of Debt and Labor in Simple Model}
-%   \begin{figure}
-%     \includegraphics[width=\textwidth,right]{../images/SimpleDebtLabor.pdf}
-%     \caption{Paths of Debt and Labor}
-%   \end{figure}
-% \end{frame}
+  \begin{align*}
+    \min_s &(x^k - s)^T \mathcal{L}_xx(x^k, \lambda^k, \mu^k) (x^k - s) \\
+    \text{s.t. } &g_x(x^k) (x^k - s) = 0 \\
+    &h_x(x) (x^k - s) \leq 0
+  \end{align*}
+
+\end{frame}
 
 \appendix
 
