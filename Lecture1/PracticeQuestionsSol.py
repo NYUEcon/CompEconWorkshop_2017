@@ -217,8 +217,9 @@ def solve_model(m):
     """
     # Solve for market clearing price
     solve_me = lambda p: excess_demand(m, p)
-
     pstar = secant(solve_me, 1.0, 1.5)
+
+    # Pull out corresponding demand for a and b in each country
     a_A, a_B = compute_demand(m, pstar)
     b_A, b_B = BC_A(m, a_A, pstar), BC_B(m, a_B, pstar)
 
