@@ -12,3 +12,6 @@
 # PGF Image files
 *.pgf
 
+# Jupyter notebooks
+*.ipynb_checkpoints
+
