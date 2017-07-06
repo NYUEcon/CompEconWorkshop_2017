@@ -1,0 +1,209 @@
+\documentclass[10pt]{beamer}
+
+  % Math Packages
+  \usepackage{algorithmic}
+  \usepackage{amsmath}
+  \usepackage{amsthm}
+  \usepackage{mathtools}
+
+  % Graphics Packages
+  \usepackage[export]{adjustbox}
+  \usepackage{graphicx}
+  \usepackage{pgf}
+
+  % Other packages
+  \usepackage{color}
+  \usepackage{csquotes}  % Adds ability to use display quotes
+  \usepackage{listings}
+
+  % Theme Settings
+  \usetheme{metropolis}
+  \usefonttheme{professionalfonts}
+
+  % Special commands
+  \DeclareMathOperator*{\argmin}{arg\,min}
+  \DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{Global Solutions and Income Fluctuation Problem}
+\author{Chase Coleman}
+\institute{NYU Stern}
+\date[]{\today}
+
+\begin{document}
+
+% Title Slide
+\begin{frame}
+  \thispagestyle{empty}
+  \titlepage
+\end{frame}
+
+
+% --------------------------------------- %
+% Introduction
+% --------------------------------------- %
+\section{Introduction to Income Fluctuation Problem}
+
+\begin{frame} \frametitle{Income Fluctuation Problem (IFP)}
+
+  Foundation for modern heterogeneous agent macro
+
+  \vspace{0.5cm}
+
+  Partial equilibrium model of a single consumer's problem
+  \begin{itemize}
+    \item Wages exogenously given
+    \item Asset return exogenously given
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame} \frametitle{Income Fluctuation Problem (IFP)}
+
+  Single consumer with preferences $$\max_{\{c_t(s^t)\}_{t=0}^{\infty}} E_0 \left[ \sum_{t=0} \beta^t u(c_t(s^t)) \right]$$
+
+  Markov stochastic process, $\{ s_t \}$
+
+  Receives stochastic income each period, $y(s_t)$
+
+  Income can either be
+  \begin{itemize}
+    \item Consumed, $c_t(s^t)$ or
+    \item Saved in risk-free asset, $a_t(s^t)$, with return $r$
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame} \frametitle{Recursive Formulation}
+
+  Problem can be ``Bellmanized'' with $(a_t, s_t)$ as the state variables
+
+  \begin{align*}
+    V(a_t, s_t) &= \max_{a_{t+1}} u(c_t) + \beta E \left[ V(a_{t+1}, s_{t+1}) | s_t \right] \\
+              &\text{Subject to} \\
+              &c_t = (1 + r) a_t + y(s_t) - a_{t+1}
+  \end{align*}
+
+\end{frame}
+
+\section{Solving the IFP}
+
+\begin{frame} \frametitle{Solving the IFP}
+  What does it mean to ``solve'' the IFP?
+
+  \vspace{0.5cm}
+
+  Want to characterize
+  \begin{itemize}
+    \item Policy function: $a^*(a_t, s_t)$
+    \item Value function: $V(a_t, s_t)$
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame} \frametitle{Three Iterative Algorithms}
+
+  Will introduce three global solution methods.
+
+  All three are variants on value function iteration
+
+  \begin{enumerate}
+    \item Discretized Value Function Iteration
+    \item Interpolated Value Function Iteration
+    \item Envelope Condition Method
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame} \frametitle{Discretized Value Function Iteration}
+
+  \begin{enumerate}
+    \item Choose grids on state variables: $\mathcal{A} \times \mathcal{S}$
+    \item Initial guess of value function: $V_0(a, s) \;\forall (a, s) \in \mathcal{A} \times \mathcal{S}$
+    \item Given $V_j$, for each $(a_t, s_t) \in \mathcal{A} \times \mathcal{S}$ \label{updatestep}
+      \begin{enumerate}
+        \item Find $a_{t+1} \in \mathcal{A}$\footnote{Just evaluate at each grid point and choose the max. Very computationally inexpensive} such that
+          \begin{align*}
+            a_{t+1} \in \argmax u(y(s_t) + (1+r) a_t - a_{t+1}) + \beta E \left[ V_j(a_{t+1}, s_{t+1}) \right]
+          \end{align*}
+        \item Update policy function $$a^*(a_t, s_t) = a_{t+1}$$
+        \item Update value function $$V_{j+1}(a_t, s_t) = u(c_t) + \beta E \left[V_{j}(a_{t+1}, s_{t+1}) \right]$$
+      \end{enumerate}
+    \item If $d(V_{j+1}, V_j) < \varepsilon$ then done, otherwise return to \ref{updatestep}
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame} \frametitle{Interpolated Value Function Iteration}
+
+  \begin{enumerate}
+    \item Choose grids on state variables: $\mathcal{A} \times \mathcal{S}$
+    \item Initial guess of value function: $V_0(a, s) \;\forall (a, s) \in \mathcal{A} \times \mathcal{S}$
+    \item Create functional approximation of $V_j$ using interpolation routines: $\hat{V}_j$ \label{interpstep}
+    \item Given $\hat{V}_j$, for each $(a_t, s_t) \in \mathcal{A} \times \mathcal{S}$
+      \begin{enumerate}
+        \item Using optimization routines, find
+          \begin{align*}
+            a_{t+1} \in \argmax u(y(s_t) + (1+r) a_t - a_{t+1}) + \beta E \left[ \hat{V}_j(a_{t+1}, s_{t+1}) \right]
+          \end{align*}
+        \item Update policy function $$a^*(a_t, s_t) = a_{t+1}$$
+        \item Update value function $$V_{j+1}(a_t, s_t) = u(c_t) + \beta E \left[\hat{V}_{j}(a_{t+1}, s_{t+1}) \right]$$
+      \end{enumerate}
+    \item If $d(V_{j+1}, V_j) < \varepsilon$ then done, otherwise return to \ref{interpstep}
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame} \frametitle{Envelope Condition Method}
+
+  \begin{enumerate}
+    \item Choose grids on state variables: $\mathcal{A} \times \mathcal{S}$
+    \item Initial guess of value function: $V_0(a, s) \;\forall (a, s) \in \mathcal{A} \times \mathcal{S}$
+    \item Create functional approximation of $V_j$ using interpolation routines: $\hat{V}_j$ \label{interpstep}
+    \item Given $\hat{V}_j$, for each $(a_t, s_t) \in \mathcal{A} \times \mathcal{S}$
+      \begin{enumerate}
+        \item Use envelope condition to get $c_t^* = (u')^{-1} \left( \frac{\partial \hat{V}_j(a_t, s_t) / \partial a_t}{1 + r} \right)$
+        \item Update policy function $$a^*(a_t, s_t) = y(s_t) + (1+r) a_t - c_t^*$$
+        \item Update value function $$V_{j+1}(a_t, s_t) = u(c^*_t) + \beta E \left[\hat{V}_{j}(a_{t+1}, s_{t+1}) \right]$$
+      \end{enumerate}
+    \item If $d(V_{j+1}, V_j) < \varepsilon$ then done, otherwise return to \ref{interpstep}
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame} \frametitle{Comparisons}
+
+  Thoughts on different algorithms:
+  \begin{itemize}
+    \item Discretized VFI:
+      \begin{itemize}
+        \item Pros: Easy to code
+        \item Cons: Infeasible for big problems
+      \end{itemize}
+    \item Interpolated VFI:
+      \begin{itemize}
+        \item Pros: Very general, solves slightly bigger problems
+        \item Cons: Optimization routines are a drag in terms of speed, infeasible for big problems
+      \end{itemize}
+    \item Envelope Condition Method:
+      \begin{itemize}
+        \item Pros: Very fast, frequently can be used in some other models to get a ``closed form'' for certain choice variables
+        \item Cons: Careful that derivatives are sufficiently nice, does not work for all models
+      \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+\section{Example}
+
+\begin{frame} \frametitle{Example}
+
+  Will walk through example of discretized value function together
+
+  \vspace{0.5cm}
+
+  Practice problem will require solving a perturbation (or two) of the income fluctuation problem using other algorithms
+
+\end{frame}
+
+\end{document}
+
