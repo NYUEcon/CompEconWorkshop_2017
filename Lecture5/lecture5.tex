@@ -1,0 +1,456 @@
+\documentclass{beamer}
+\usetheme{metropolis}           % Use metropolis theme
+\usepackage{appendixnumberbeamer}
+\usepackage{bbm}
+\metroset{progressbar=frametitle, titleformat=smallcaps}
+\title{Lecture 5: Global Solution Methods (continued)}
+\date{July 13, 2017}
+\author{Victoria Gregory}
+\institute{New York University}
+\begin{document}
+\maketitle
+
+\begin{frame}{Road Map}
+Continue illustrating methods for solving a dynamic programming problem \textbf{globally}. Today's topics:
+  \tableofcontents
+\end{frame}
+
+\section{Howard Improvement}
+
+\begin{frame}{Howard Improvement}
+For the moment, go back to value function iteration method Chase talked about last week.
+\begin{itemize}
+\item Choosing the maximizing policy is typically the most time-consuming part of these algorithms
+\item \textbf{Idea:} reduce the number of times we update the policy function rather than the value function
+\item On some iterations, use the current guess for the policy function to update the value function
+\item This works because the policy function typically converges faster than the value function
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Howard Improvement}
+First need to choose a parameter $H$, the number of times you update the value function using the existing policy function
+\begin{itemize}
+\item Requires some experimentation
+\item Can increase $H$ after each iteration
+\item Start using Howard Improvement only after doing VFI a few times
+\item Too high of an $H$ can cause the value function to move too far away from the true one
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Howard Improvement}
+
+  \begin{enumerate}
+    \item Choose grids on state variables: $\mathcal{A} \times \mathcal{S}$
+    \item Initial guess of value function: $V_0(a, s) \;\forall (a, s) \in \mathcal{A} \times \mathcal{S}$
+    \item Given $V_j$, for each $(a_t, s_t) \in \mathcal{A} \times \mathcal{S}$ \label{updatestep}
+      \begin{enumerate}
+        \alert{\item Find $a_{t+1} \in \mathcal{A}$ such that}
+          \begin{align*}
+            \alert{a_{t+1} \in \text{argmax } u(y(s_t) + (1+r) a_t - a_{t+1}) + \beta E \left[ V_j(a_{t+1}, s_{t+1}) \right]}
+          \end{align*}
+        \alert{\item Update policy function $$a^*(a_t, s_t) = a_{t+1}$$}
+        \item Update value function $$V_{j+1}(a_t, s_t) = u(c_t) + \beta E \left[V_{j}(a_{t+1}, s_{t+1}) \right]$$
+      \end{enumerate}
+    \item If $d(V_{j+1}, V_j) < \varepsilon$ then done, otherwise return to \ref{updatestep}
+  \end{enumerate}
+
+\end{frame}
+
+\section{Policy Function Iteration}
+
+\begin{frame}{Income Fluctuation Problem}
+\begin{itemize}
+    \item Idiosyncratic state variables: $(a, y)$
+    \item Discretize the income process: $y_j$ for $j = 1, \hdots, N$
+    \item Transition function $\pi(y'|y)$
+    \item Household problem in recursive form:
+    \begin{align*}
+    V(a, y) = \max_{c, a'} u(c) + \beta \displaystyle \sum_{y' \in Y} \pi(y'|y) V(a', y') 
+    \end{align*}
+    subject to:
+    \begin{align*}
+    c + a' &\leq Ra + y \\
+    a' &\geq -\phi
+    \end{align*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Policy Function Iteration}
+Euler equation, after substituting budget constraint:
+\begin{align*}
+u_c(Ra + y_j - a') - \beta R \displaystyle \sum_{y_i \in Y} \pi(y_i|y_j) u_c(Ra' + y_i - a'') \geq 0
+\end{align*} 
+\textbf{Idea:}
+\begin{itemize}
+\item Guess a policy function instead of a value function 
+\item Iterate on the Euler equation instead of the Bellman equation
+\item Policy function typically converges faster than the value function
+\end{itemize}
+\end{frame}
+
+\newcounter{savedenum}
+\newcommand*{\saveenum}{\setcounter{savedenum}{\theenumi}}
+\newcommand*{\resume}{\setcounter{enumi}{\thesavedenum}}
+\begin{frame}{Algorithm}
+\begin{enumerate}
+\item Construct a grid on the asset space $\{a_0, a_1, \hdots, a_m \}$, where $a_0 = -\phi$. 
+\item Guess a policy function for $a''$ on the grid points: $\hat{a}_0(a_i, y_j)$.
+\item For every point on the grid $(a_i, y_j)$, check whether the borrowing constraint binds:
+\begin{align*}
+u_c(Ra_i + y_j - \alert{a_0}) - \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j) u_c(R\alert{a_0} + y' - \hat{a}_0(\alert{a_0}, y_j)) > 0
+\end{align*} 
+\item \textbf{If the inequality holds}, the borrowing constraint binds. Set $a'_0(a_i, y_j) = a_0$ and repeat step 3 for the next grid point.
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Algorithm (cont'd)}
+\begin{enumerate}
+\resume
+\item \textbf{If the inequality does not hold}, there is an interior solution. Use an non-linear solver to find the solution $a^*$ of:
+\begin{align*}
+u_c(Ra_i + y_j - \alert{a^*}) - \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j) u_c(R\alert{a^*} + y' - \hat{a}_0(\alert{a^*}, y_j)) > 0
+\end{align*} 
+\begin{itemize}
+\item To evaluate $\hat{a}_0(a, y')$ outside the grid points, use linear interpolation.
+\item For a given $a^*$, find the adjacent grid points $\{a_i, a_{i+1}\}$ and compute
+\begin{align*}
+\hat{a}_0(a^*, y') = \hat{a}_0(a_i, y') + (a^* - a_i) \left( \frac{\hat{a}_0(a_{i+1}, y') - \hat{a}_0(a_i, y')}{a_{i+1} - {a_i}} \right)
+\end{align*} 
+\end{itemize}
+Set $a'_0(a_i, y_j) = a^*$ and repeat step 3 for the next grid point.
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Algorithm (cont'd)}
+\begin{enumerate}
+\resume
+\item Check convergence by comparing $a'_0(a_i, y_j)$ to $\hat{a}_0(a_i, y_j)$. Declare convergence on iteration $n$ if:
+\begin{align*}
+\max_{i, j} \{|a'_n(a_i, y_j) - \hat{a}_n(a_i, y_j)| \} < \varepsilon
+\end{align*}
+\item Stop if convergence is achieved, otherwise go back to step 3 with new guess $\hat{a}_1(a_i, y_j) - a'_0(a_i, y_j)$.
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\section{Endogenous Grid Method}
+
+\begin{frame}{Endogenous Grid Method}
+Euler equation:
+\begin{align*}
+u_c(c(a, y)) \geq \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y) u_c(c(a', y'))
+\end{align*}
+(with equality if $a' > \phi$) \\ \vspace{5mm}
+\textbf{Idea:}
+\begin{itemize}
+\item Instead of building a grid over $a$, build a grid over $a'$, next period's asset holdings
+\item Iterate over the consumption policy $c(a, y)$
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Algorithm}
+\begin{enumerate}
+\item Construct a grid for $(a', y)$. The bottom point on the grid for $a'$ should be the borrowing limit, $-\phi$.
+\item Guess a consumption policy, $\hat{c}_0(a_i, y_j)$. Reasonable initial guess: $\hat{c}_0(a_i, y_j) = r a_i + y_j$
+\item For each pair $\{a'_i, y_j\}$ construct the right-hand side of the Euler equation using the current guess for consumption $\hat{c}_0$:
+\begin{align*}
+B(a'_i, y_j) = \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j) u_c(\hat{c}_0(a'_i, y'))
+\end{align*}
+(RHS of the Euler equation with $a'_i$ assets tomorrow when your income today is $y_j$)
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Algorithm (cont'd)}
+\begin{enumerate}
+\resume
+\item \textbf{Key step}: now we can use the Euler equation to find $\tilde{c}(a'_i, y_j)$ that satisfies
+\begin{align*}
+u_c(\tilde{c}(a'_i, y_j)) = B(a'_i, y_j)
+\end{align*}
+This can be done analytically: if $u_c(c) = c^{-\gamma}$, then $\tilde{c}(a'_i, y_j) = [B(a'_i, y_j)]^{-\frac{1}{\gamma}}$. \\ \vspace{5mm}
+Advantages:
+\begin{itemize}
+\item Don't need to use a nonlinear solver!
+\item Consequently, only need to compute the expectation in step 3 once.
+\end{itemize}
+Note that this requires $u_c$ to be invertible.
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Algorithm (cont'd)}
+\begin{enumerate}
+\resume
+\item Now that we have consumption, can solve for assets today that would lead the consumer to have $a'_i$ assets tomorrow is his current income shock is $y_j$: $a^*(a'_i, y_j)$. We can back this out of the budget constraint:
+\begin{align*}
+\tilde{c}(a'_i, y_j) + a'_i = R a^*_i + y_j
+\end{align*}
+Now you have $c(a_i^*, y_j) = \tilde{c}(a'_i, y_j)$, which is \textbf{not} defined on the original grid -- this is the \textbf{endogenous grid}.
+\item Let $a_0^*$ be the value of assets that induces the borrowing constraint to bind next period (the value of $a^*$ at the bottom grid point). You'll have one for each possible income state.
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Algorithm (cont'd)}
+\begin{enumerate}
+\resume
+\item To \textbf{update the guess for consumption on the original grid}, $\hat{c}_1(a_i, y_j)$:
+\begin{itemize}
+\item On grid points $a_i > a_0^*$, find $a_n^*, a_{n+1}^*$ such that $a_n^* < a_i < a_{n+1}^*$ and use linear interpolation between $c(a_n^*, y_j)$ and $c(a_{n+1}^*, y_j)$ to get $\hat{c}_1(a_i, y_j)$.
+\item On grid points $a_i < a_0^*$, use the budget constraint:
+\begin{align*}
+\hat{c}_1(a_i, y_j) = R a_i + y_j - a'_0
+\end{align*}
+since we know that borrowing constraint is going to be binding next period, so the Euler equation won't hold with equality.
+\end{itemize}
+\item Check convergence:
+\begin{align*}
+\max_{i, j} \{|c_{n+1}(a_i, y_j) - c_n(a_i, y_j)| \} < \varepsilon
+\end{align*}
+\saveenum
+\end{enumerate}
+\end{frame}
+
+\section{Collocation}
+
+\begin{frame}{Collocation}
+\begin{itemize}
+\item \textbf{Main idea}
+\begin{itemize}
+\item Approximate the value function with a linear combination of basis functions
+\item Need to solve for the coefficients on these basis functions
+\item Family of basis functions is chosen by the economist
+\end{itemize}
+\item Algorithm based on the one on \href{http://www.simonmongey.com/teaching--notes.html}{Simon's website}
+\item Uses tools from Laszlo's lecture on function approximation (now, the function we need to approximate is unknown)
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Advantages}
+\begin{itemize}
+\item Very fast, stable
+\item Many objects only need to be computed once, ahead of time
+\item End up with a linear system on each iteration
+\item Once you've solved for the coefficients, you can easily evaluate the value and policy function on any grid
+\item Extends to other settings
+\item Julia package \texttt{BasisMatrices.jl} very convenient for this setup
+\item If you're using MATLAB, everything is vectorized
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Agent's Problem}
+\begin{align*}
+    V(a, y) = \max_{a' \in B(a, y)} u(Ra + y - a') + \beta \displaystyle \sum_{y' \in Y} \pi(y, y') V(a', y') 
+\end{align*}
+where $B(a, y) = [-\phi, Ra + y]$. \\ \vspace{1mm}
+We can separate the expected value function to get the following system:
+\begin{align*}
+    V(a, y) &= \max_{a' \in B(a, y)} u(Ra + y - a') + \beta V_e(a', y) \\
+    V_e(a, y) &= \displaystyle \sum_{y' \in Y} \pi(y, y') V(a, y')
+\end{align*}
+\textbf{Idea:} if we directly approximate the expected value function, we can avoid computing the expectation each time we solve for $a'$.
+\end{frame}
+
+\begin{frame}{Rewriting the System}
+\begin{itemize}
+\item Let $\mathbf{a}$ be a length $N_a$ grid for assets
+\item Let $\mathbf{y}$ be a length $N_y$ grid for income, with transition matrix $\Pi$
+\item Stack each combination of these to get a set of collocation nodes $\mathbf{s}$, which is $N \times 2$ where $N = N_a N_y$ -- \texttt{gridmake} will do this for any number of grids
+\item Let $s_i$ be an asset, income pair, or a row in $\mathbf{s}$  
+\end{itemize}
+In this notation, the system becomes: 
+\begin{align*}
+    V(s_i) &= \max_{a' \in B(s_i)} u(Rs_{i1} + s_{i2} - a') + \beta V_e([a', s_{i2}]) \\
+    V_e(s_i) &= \displaystyle \sum_{y' \in Y} \pi(s_{i2}, y') V([s_{i1}, y'])
+\end{align*}
+\end{frame}
+
+\begin{frame}{Interpolants}
+Let's replace the value functions with interpolants, consisting of a basis function $\phi$ and sets of coefficients $\{c_j \}_{j=1}^N$.
+\begin{align*}
+V(s_i) &= \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j \\
+V^e(s_i) &= \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j^e
+\end{align*}
+\begin{itemize}
+\item Approximating functions can be splines, Chebyshev, linear, etc.
+\item $N$ coefficients and $N$ points on the state space
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Interpolants}
+Substitute these back into our system:
+\begin{align*}
+    \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j &= \max_{a' \in B(s_i)} u(Rs_{i1} + s_{i2} - a') + \beta \displaystyle \sum_{j=1}^{N} \phi([a', s_{i2}]) c_j^e \\
+    \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j^e &= \displaystyle \sum_{y' \in Y} \pi(s_{i2}, y') \displaystyle \sum_{j=1}^{N} \phi([s_{i1}, y']) c_j
+\end{align*}
+\textbf{Linear} system in $2N$ equations and $2N$ unknowns.
+\end{frame}
+
+\begin{frame}{Stacking the System}
+\begin{itemize}
+\item $V(s_i) = \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j$ becomes $\mathbf{V}(s) = \Phi(s)c$
+\begin{itemize}
+\item $\Phi(s)$ is the basis matrix of the interpolant evalueated at $s$
+\item $c = (c_1, \hdots, c_N)'$ is the vector of coefficients
+\end{itemize}
+\item So the first equation becomes
+\begin{align*}
+\Phi(s)c = \max_{a' \in \mathbf{B}(s)} \mathbf{u}(s, a') + \beta \Phi([a', s_2]) c^e
+\end{align*}
+\item The second equation becomes
+\begin{align*}
+\Phi(s)c^e = (\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) c
+\end{align*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{System to Solve}
+\begin{align*}
+\Phi(s)c &= \max_{a' \in \mathbf{B}(s)} \mathbf{u}(s, a') + \beta \Phi([a', s_2]) c^e \\
+\Phi(s)c^e &= (\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) c
+\end{align*}
+How to implement this computationally?
+\begin{enumerate}
+\item Compute most of the basis matrices in advance
+\item Given a guess for $\{c, c^e \}$, compute the max
+\item Iterate on the equations, update coefficients until convergence
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Computing Basis Matrices}
+\begin{itemize}
+\item Create a \texttt{Basis} object to set up the type of interpolant, collocation nodes, etc.: 
+\begin{verbatim}    
+    basis = Basis(SplineParams(agrid0, 0, order),
+                  LinParams(ygrid0, 0))
+    s, (agrid, ygrid) = nodes(basis)
+\end{verbatim}
+\item To compute the basis matrix, $\Phi(s)$:
+\begin{verbatim}
+    bs = BasisMatrix(basis, Direct(), s, [0 0])
+    Φ = convert(Expanded, bs).vals[1]
+\end{verbatim}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Computing Basis Matrices}
+What else can be stored in advance?
+\begin{itemize}
+\item $(\Pi \otimes \mathbf{I}_{N_a}) \Phi (s)$
+\begin{verbatim}
+    Emat = kron(Π, speye(Na))*Φ
+\end{verbatim}
+\item Part of $\Phi([a', s_2])$
+\begin{itemize}
+\item This is really a tensor product: $\Phi_y(y) \Phi_{a'}(a')$
+\item Since the values of $y$ we want to evaluate at never change, we can compute just that part of the interpolation in advance, and then later on create the basis matrix for $a'$.
+\begin{verbatim}
+    Φy = bs.vals[2]         # store this
+    ...
+     bs_a = BasisMatrix(h.basis[1], Direct(), ap, 0)
+    Φa = bs_a.vals[1]
+    Φapy = row_kron(h.Φy, Φa)
+\end{verbatim}
+\item Less basis matrices need to be computed by the solver
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Optimization Step}
+\begin{align*}
+\Phi(s)c &= \max_{a' \in \mathbf{B}(s)} \mathbf{u}(s, a') + \beta \Phi([a', s_2]) c^e \\
+\Phi(s)c^e &= (\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) c
+\end{align*}
+\vspace{-8mm}
+\begin{itemize}
+\item Now that we know how to compute basis matrices, it's straightforward to compute the objective function given a guess for the coefficients
+\item Golden search works well for computing the max (at least in one dimension)
+\begin{verbatim}
+    lower_bound = zeros(size(s, 1), )
+    upper_bound = (1 + h.r).*s[:, 1] + s[:, 2]
+    f(ap::Vector{Float64}) = value(h, s, ap)
+      ap, v1 = golden_method(f, lower_bound, upper_bound)
+\end{verbatim}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Iteration}
+How to update the guesses for $c, c^e$?
+\begin{enumerate}
+\item Bellman iteration
+\item Newton iteration (linearity of the system allows us to write down the Jacobian)
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Bellman Iteration}
+Compute the right-hand side and invert $\Phi(s)$ to get the new coefficient guesses:
+\begin{align*}
+c_{k+1} &= \Phi(s)^{-1} \left[\mathbf{u}(s, a'(s)) + \beta \Phi([a'(s), s_2]) c^e_k \right] \\
+c^e_{k+1} &= \Phi(s)^{-1} \left[ (\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) c_k \right]
+\end{align*}
+\vspace{-8mm}
+\begin{itemize}
+\item Do this a few times to get a decent initial guess for the Newton iterations
+\item Sometimes useful to let this run for a while to make sure you have a contraction mapping
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Newton Iteration}
+View this as a root-finding problem
+\begin{align*}
+\mathbf{g}_1(c, c^e) &= \Phi(s) c - \left[\mathbf{u}(s, a'(s)) + \beta \Phi([a'(s), s_2]) c^e \right] \\
+\mathbf{g}_2(c, c^e) &= \Phi(s) c^e - \left[ (\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) c \right]
+\end{align*}
+Because the system is linear in the coefficients, we can easily write down the Jacobian:
+\begin{align*}
+\mathbf{D}(c, c^e) =
+\begin{bmatrix}
+\Phi(s) & -\beta \Phi([a'(s), s_2]) \\
+-(\Pi \otimes \mathbf{I}_{N_a}) \Phi (s) & \Phi(s)
+\end{bmatrix}
+\end{align*}
+Updating:
+\begin{align*}
+\begin{bmatrix}
+c_{k+1} \\
+c^e_{k+1}
+\end{bmatrix}
+=
+\begin{bmatrix}
+c_{k} \\
+c^e_{k}
+\end{bmatrix}
+- \mathbf{D}(c_k, c_k^e)^{-1}
+\begin{bmatrix}
+\mathbf{g}_1(c_k, c^e_k) \\
+\mathbf{g}_2(c_k, c^e_k)
+\end{bmatrix}
+\end{align*} \\
+\vspace{2mm}
+These converge \textbf{much} faster than the Bellman iterations!
+\end{frame}
+
+\begin{frame}{Homework}
+Solve the following problem of firm investment:
+\begin{align*}
+V(k, z) = \max_{i, n} z k^{\alpha} n^{\nu} - i - \eta (k' - k)^2 - wn + \beta \mathbb{E} \left[V(k', z') \right]
+\end{align*}
+where $k' = (1 - \delta)k + i$.
+\begin{itemize}
+\item Eliminate $n$ by solving static labor choice problem
+\item Parameters: $w = 0.99$; $w = 1.26$; $\alpha = 0.26$; $\nu = 0.64$; $\delta = 0.07$; $\eta = 0.5$
+\item $z$ follows a Markov chain with values $[0.7578 \hspace{1mm} 0.9117 \hspace{1mm} 1.0969 \hspace{1mm} 1.3196]'$ and transition matrix:
+\vspace{1mm}
+$$\begin{bmatrix}
+ 0.9269  &   0.0713  & 0.0018 & 0 \\
+ 0.0238  &   0.9281  & 0.0475 & 0.0001 \\
+ 0.0001  &   0.0475  & 0.9281 & 0.0238 \\
+ 0       &   0.0018  & 0.0713 & 0.9269
+\end{bmatrix}$$
+\end{itemize}
+\end{frame}
+
+\end{document}
