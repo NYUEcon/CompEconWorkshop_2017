@@ -109,7 +109,7 @@ u_c(Ra_i + y_j - \alert{a_0}) - \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j
 \resume
 \item \textbf{If the inequality does not hold}, there is an interior solution. Use an non-linear solver to find the solution $a^*$ of:
 \begin{align*}
-u_c(Ra_i + y_j - \alert{a^*}) - \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j) u_c(R\alert{a^*} + y' - \hat{a}_0(\alert{a^*}, y_j)) > 0
+u_c(Ra_i + y_j - \alert{a^*}) - \beta R \displaystyle \sum_{y' \in Y} \pi(y'|y_j) u_c(R\alert{a^*} + y' - \hat{a}_0(\alert{a^*}, y_j)) = 0
 \end{align*} 
 \begin{itemize}
 \item To evaluate $\hat{a}_0(a, y')$ outside the grid points, use linear interpolation.
@@ -130,7 +130,7 @@ Set $a'_0(a_i, y_j) = a^*$ and repeat step 3 for the next grid point.
 \begin{align*}
 \max_{i, j} \{|a'_n(a_i, y_j) - \hat{a}_n(a_i, y_j)| \} < \varepsilon
 \end{align*}
-\item Stop if convergence is achieved, otherwise go back to step 3 with new guess $\hat{a}_1(a_i, y_j) - a'_0(a_i, y_j)$.
+\item Stop if convergence is achieved, otherwise go back to step 3 with new guess $\hat{a}_1(a_i, y_j) = a'_0(a_i, y_j)$.
 \saveenum
 \end{enumerate}
 \end{frame}
@@ -245,7 +245,7 @@ since we know that borrowing constraint is going to be binding next period, so t
 \begin{align*}
     V(a, y) = \max_{a' \in B(a, y)} u(Ra + y - a') + \beta \displaystyle \sum_{y' \in Y} \pi(y, y') V(a', y') 
 \end{align*}
-where $B(a, y) = [-\phi, Ra + y]$. \\ \vspace{1mm}
+where $B(a, y) = [-\phi, Ra + y)$. \\ \vspace{1mm}
 We can separate the expected value function to get the following system:
 \begin{align*}
     V(a, y) &= \max_{a' \in B(a, y)} u(Ra + y - a') + \beta V_e(a', y) \\
@@ -293,7 +293,7 @@ Substitute these back into our system:
 \begin{itemize}
 \item $V(s_i) = \displaystyle \sum_{j=1}^{N} \phi(s_i) c_j$ becomes $\mathbf{V}(s) = \Phi(s)c$
 \begin{itemize}
-\item $\Phi(s)$ is the basis matrix of the interpolant evalueated at $s$
+\item $\Phi(s)$ is the basis matrix of the interpolant evaluated at $s$
 \item $c = (c_1, \hdots, c_N)'$ is the vector of coefficients
 \end{itemize}
 \item So the first equation becomes
