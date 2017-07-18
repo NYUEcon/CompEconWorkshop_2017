@@ -1,0 +1,547 @@
+\documentclass{beamer}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{multirow}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+
+\newcommand{\backupbegin}{
+   \newcounter{finalframe}
+   \setcounter{finalframe}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \setcounter{framenumber}{\value{finalframe}}
+}
+
+
+\usetheme{CambridgeUS}
+\usecolortheme{dolphin}
+\usefonttheme[onlymath]{serif}
+\makeatother
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.3\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.55\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.15\paperwidth,ht=2.25ex,dp=1ex,center]{date in head/foot}%
+    \insertframenumber{} / \inserttotalframenumber\hspace*{1ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatletter
+\setbeamertemplate{navigation symbols}{}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\beamersetuncovermixins{\opaqueness<1>{25}}{\opaqueness<2->{15}}
+
+\begin{document}
+
+\title{Accuracy of Solution and Models with Liquid/Illiquid Assets}
+\author[Polo (NYU)]{Alberto Polo}
+\date{\today \\}
+
+\small
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\section{Accuracy Tests}
+
+\begin{frame}
+  \frametitle{Accuracy Tests}
+  \begin{block}{Goal:}
+    \begin{itemize}
+      \item Measure accuracy of numerical solution
+      \item Issue could be number/position of nodes, basis functions, \ldots
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Tests based on}
+    \begin{itemize}
+      \item Euler equation errors
+      \item Den Haan-Marcet statistic
+    \end{itemize}
+  \end{block}
+\bigskip
+  Apply to income fluctuation problem (IFP), but can be applied to other problems
+\end{frame}
+
+\subsection{Standard Euler-equation test}
+
+\begin{frame}
+  \frametitle{Standard Euler-equation test}
+  \begin{itemize}
+    \item   Euler equation if unconstrained
+      \begin{equation}\tag{EE}
+        u_c(c_t) - \beta R \mathbb{E}_{s_{t+1}}[u_c(c_{t+1})|s_t] = 0
+      \end{equation}
+    \end{itemize}
+    \begin{block}{Idea}
+      EE $\approx 0$ at nodes, but may be far from 0 outside of nodes
+    \end{block}
+    \begin{itemize}
+      \item   Define relative approximation error $\epsilon$ as value such that, at given point $(a,s)$ in state space, EE holds with equality
+        \begin{equation*}
+          u_c(c(a,s)(1-\epsilon)) = \beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]
+        \end{equation*}
+        Then Euler equation error is
+        \begin{equation*}
+          \epsilon = 1-\frac{u_c^{-1}\left(\beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]\right)}{c(a,s)}
+        \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Interpretation}
+  \begin{itemize}
+    \item Error of 0.01 means agent makes a mistake equivalent to \$ 1 for each \$ 100 consumed in any period
+    \item Error in value function (i.e. implied cost in terms of agent's welfare) is of order of $\epsilon^2$ (Santos 2000)
+  \end{itemize}
+  \end{block}
+
+  \begin{block}{Reporting}
+    \begin{itemize}
+      \item Long simulation, exclude states where agent is constrained, take maximum and average of errors in absolute value
+      \item Build fine grid for assets $\{\alpha_i\}_i$ (different than grid used for solution approximation), compute $\epsilon(\alpha_i,s_j)$ for all $i, j$ and plot
+      \item Usually reported in base 10 log (-2 means \$ 1 for each \$ 100). Acceptable average error $\leq -4$
+    \end{itemize}
+  \end{block}
+  \medskip
+  Test only looks at one-period ahead inaccuracies: tiny errors can accumulate \ldots
+\end{frame}
+
+\subsection{Dynamic Euler-equation test}
+
+\begin{frame}
+  \frametitle{Dynamic Euler-equation test}
+  Excluding periods when constaint binds, compare series $\{\hat{c}_t,\hat{a}_t\}_{t=1}^T$ generated with numerical solution and $\{\tilde{c}_t,\tilde{a}_t\}_{t=1}^T$, where
+  \begin{itemize}
+    \item $\tilde{a}_1 = \hat{a}_1$
+    \item from EE and budget constraint
+  \begin{equation*}
+    \tilde{c}_t = u_c^{-1}\left(\beta R \mathbb{E}_{s'}[u_c(c(a'(\tilde{a}_t,s_t),s'))|s_t]\right)
+  \end{equation*}
+  \begin{equation*}
+    \tilde{a}_{t+1}= R\tilde{a}_t - \tilde{c}_t + y(s_t)
+  \end{equation*}
+  \end{itemize}
+
+  \begin{block}{Notes}
+    \begin{itemize}
+      \item In $\{\tilde{c}_t,\tilde{a}_t\}_{t=1}^T$, numerical solution used only indirectly to compute conditional expectation
+      \item Report average or maximum \% absolute errors
+      \item Demanding test: occasional large error may not mean solution is generally bad. If large difference between average and maximum, worth inspecting the path
+  \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection{Den Haan-Marcet Statistic}
+
+\begin{frame}
+  \frametitle{Den Haan-Marcet Statistic}
+  \begin{itemize}
+    \item EE implies that residual
+    \begin{equation*}
+      \epsilon_{t+1} = u_c(c_t) - \beta R u_c(c_{t+1})
+    \end{equation*}
+    is uncorrelated with any variable in the information set at time $t$
+    \item Therefore for each $t$
+    \begin{equation}\label{eq:uncorr}
+      \mathbb{E}_t[\epsilon_{t+1} \mathbf{z}_t]=0
+    \end{equation}
+    where $\mathbf{z}_t$ is vector of variables in known at $t$, e.g. $[\{y_j, c_j, a_j\}_{j=0}^{t}]$
+    \begin{block}{Idea}
+      A poor approximate solution does not satisfy this property
+    \end{block}
+    \item Compute LHS of \ref{eq:uncorr} under a given approximate solution by simulating a path of length $T$ and constructing
+    \begin{equation*}
+      \mathbf{q}_T = \frac{\sum_{t=1}^T \hat{\epsilon}_{t+1}\hat{\mathbf{z}}_t}{T}
+    \end{equation*}
+    where $\hat{\epsilon}_{t+1}$ and $\hat{\mathbf{z}}_t$ are simulated counterparts of $\epsilon_{t+1}$ and $\mathbf{z}_t$ in \ref{eq:uncorr}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{itemize}
+    \item Under mild conditions, $\sqrt{T}\mathbf{q}_T\xrightarrow{d}N(0,V)$, and the quadratic form of the test statistic
+    \begin{equation*}
+      T\mathbf{q}_T'\hat{V}_T^{-1}\mathbf{q}_T\xrightarrow{d}\chi^2_r
+    \end{equation*}
+    where $\hat{V}_T^{-1}$ is the inverse of the matrix
+    \begin{equation*}
+      \hat{V}_T = \frac{\sum_{t=1}^T \hat{\epsilon}_{t+1}\hat{\mathbf{z}}_t\hat{\mathbf{z}}_t'\hat{\epsilon}_{t+1}}{T}
+    \end{equation*}
+  \end{itemize}
+  \begin{block}{Notes}
+    \begin{itemize}
+      \item Given a level of approximation of the solution, can always find $T$ large enough that the null is rejected, i.e. test is failed by the approximate solution
+      \item Not a problem if \textbf{comparing different approximation methods}: can compare them by computing - for each method - the smallest $T$ such that the test is failed, and then compare these thresholds
+  \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{Notes (continued)}
+    \begin{itemize}
+      \item In order to \textbf{assess the accuracy of a given solution}, Den Haan and Marcet suggest this procedure:
+      \begin{enumerate}
+        \item Draw a long simulation path from the approximate solution and compute the statistic (e.g. T=5000)
+        \item Record whether the value of the statistic is above/below the 2.5\% critical value from the $\chi^2_r$ distribution
+        \item Repeat several times the previous steps (e.g. N=500) and calculate the fraction of simulations where the test fails (i.e. $>$ critical value). If this fraction is substantially different than the theoretical 5\%, then the test indicates the solution is inaccurate
+      \end{enumerate}
+  \end{itemize}
+  \end{block}
+\bigskip
+
+\textcolor{red}{Excercise:} apply one of these 3 tests (one-period/dynamic Euler equation tests, DHM statistic) to one of the solutions to the IFP you computed in the past weeks and discuss the results
+
+\end{frame}
+
+\section{IFP with Liquid/Illiquid Assets}
+
+
+\begin{frame}
+  \frametitle{IFP with Liquid/Illiquid Assets}
+  IFP with 2 assets:
+  \begin{itemize}
+    \item one adjusted at no cost (''liquid asset", $a$)
+    \item to adjust the other, must pay fixed cost $\kappa$ (''illiquid asset", $d$)
+    \item illiquid asset has higher return, $R^d>R^a$ (or in terms of prices: $q^a>q^d$)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  When adjusting illiquid asset $d$,
+  \begin{equation*}
+  V^A(a, d, s) = \max_{c, a', d'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(a', d', s')|s]\right\}
+  \end{equation*}
+  subject to
+  \begin{equation*}
+  c + q^aa' + q^dd' = a + d + y(s) - \kappa\text{; }a'\geq 0 \text{; }d' \geq 0
+  \end{equation*}
+  When not adjusting,
+  \begin{equation*}
+  V^N(a, d, s) = \max_{c, a'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(a', d', s')|s]\right\}
+  \end{equation*}
+  subject to
+  \begin{equation*}
+  c + q^aa' = a  + y(s)\text{; }d' = \frac{d}{q^d}\text{; }a'\geq 0
+  \end{equation*}
+  where
+  \begin{equation*}
+    \mathbf{V}(a, d, s) = \max\left\{V^A(a, d, s), V^N(a, d, s)\right\}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  When adjusting illiquid asset $d$,
+  \begin{equation*}
+  V^A(\textcolor{red}{x}, s) = \max_{c, a', d'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(a', d', s')|s]\right\}
+  \end{equation*}
+  subject to
+  \begin{equation*}
+  c + q^aa' + q^dd' = \textcolor{red}{x} - \kappa\text{; }a'\geq 0 \text{; }d' \geq 0
+  \end{equation*}
+  When not adjusting,
+  \begin{equation*}
+  V^N(\textcolor{red}{x}, d, s) = \max_{c, a'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(a', d', s')|s]\right\}
+  \end{equation*}
+  subject to
+  \begin{equation*}
+  c + q^aa' = \textcolor{red}{x}\text{; }d' = \frac{d}{q^d}\text{; }a'\geq 0
+  \end{equation*}
+  where
+  \begin{equation*}
+    \mathbf{V}(a, d, s) = \max\left\{V^A(\textcolor{red}{a+d+y(s)}, s), V^N(\textcolor{red}{a + y(s)}, d, s)\right\}
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{FOCs}
+  \begin{itemize}
+    \item Due to non-convexity, necessary but not sufficient
+  \end{itemize}
+  Define operator
+  \begin{equation*}
+    \tilde{\max}\left\{f,g\right\}(a,d,s) =
+    \begin{cases}
+    f(\cdot)& \text{if } V^A(a + d + y(s), s)>V^N(a + y(s), d, s)\\
+    g(\cdot)              & \text{otherwise}
+    \end{cases}
+  \end{equation*}
+  and functions
+  \begin{equation*}
+    FV_a(a,d,s) = \mathbb{E}_{s'} \left[\tilde{\max}\left\{V^A_x,V_x^N\right\}(a,d,s')|s\right]
+  \end{equation*}
+  \begin{equation*}
+    FV_d(a,d,s) = \mathbb{E}_{s'} \left[\tilde{\max}\left\{V^A_x,V_d^N\right\}(a,d,s')|s\right]
+  \end{equation*}
+\end{frame}
+
+\begin{frame}
+  No-adjust case:
+  \begin{equation} \tag{EE-N}
+    u_c(c)\geq \frac{\beta}{q^a}FV_a(a',d',s)
+  \end{equation}
+  \begin{equation} \tag{Env-N 1}
+    V^N_x(x,d,s) = u_c(c)
+  \end{equation}
+  \begin{equation} \tag{Env-N 2}
+    V^N_d(x,d,s) = \frac{\beta}{q^d}FV_d(a',d',s)
+  \end{equation}
+  Adjust case:
+  \begin{equation} \tag{EE-A}
+    u_c(c)\geq \frac{\beta}{q^a}FV_a(a',d',s)
+  \end{equation}
+  \begin{equation} \tag{Portfolio}
+    u_c(c)\geq \frac{\beta}{q^d}FV_d(a',d',s)
+  \end{equation}
+  \begin{equation} \tag{Env-A}
+    V^A_x(x,s) = u_c(c)
+  \end{equation}
+\end{frame}
+
+\subsection{``PFI" Algorithm}
+
+\begin{frame}
+  \frametitle{``PFI" Algorithm}
+
+  Essentially, Kaplan, Violante (2014)
+  \medskip
+
+  \footnotesize
+  - Choose grids for continuous variables $x, a, d$
+  \medskip
+
+  - \textbf{Iteration 0:}
+  \begin{itemize}
+    \item Guess $c^A(x_i, s_j)$, $c^N(x_i, d_k, s_j)$, $V^A(x_i, s_j)$, $V^N(x_i, d_k, s_j)$, $V_d^N(x_i, d_k, s_j)$. For instance,
+    \begin{equation*}
+      c^A(x_i, s_j) = \max\{x_i-\kappa,\underline{c}\}
+    \end{equation*}
+    \begin{equation*}
+      c^N(x_i, d_k, s_j) = x_i
+    \end{equation*}
+    \begin{equation*}
+      V^A(x_i, s_j) = u(c^A(x_i, s_j))
+    \end{equation*}
+    \begin{equation*}
+      V^N(x_i, d_k, s_j) = u(c^N(x_i, d_k, s_j))
+    \end{equation*}
+    \begin{equation*}
+      V_d^N(x_i, d_k, s_j)=0
+    \end{equation*}
+    % which implies
+    % \begin{equation*}
+    %   V^A_x(x_i, s_j) = u_c(\max\{x_i-\kappa,\underline{c}\})
+    % \end{equation*}
+    % \begin{equation*}
+    %   V^N_x(x_i, d_k, s_j) = u_c(x_i)
+    % \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \footnotesize
+  - \textbf{Iteration t - preliminary step:}
+  \begin{itemize}
+  \item Define interpolants $\Phi c^A(x, s)$, $\Phi c^N(x, d, s)$, $\Phi V^A(x, s)$, $\Phi V^N(x, d, s)$, $\Phi V_d^N(x, d, s)$ for $c^A(x, s)$, $c^N(x, d, s)$, $V^A(x, s)$, $V^N(x, d, s)$, $V_d^N(x, d, s)$, respectively
+  \item Compute
+  \begin{equation*}
+    \tilde{V}(x_i, d_k, s_j) = \Phi V^A(x_i+d_k, s_j)-V^N_x(x_i, d_k, s_j)
+  \end{equation*}
+  and define associated interpolant $\Phi \tilde{V}(x, d, s)$  to solve $\tilde{max}$ decision
+  \item Compute
+  \begin{equation*}
+    \begin{split}
+    FV_a(a_m,d_k,s_j) &= \mathbb{E}_{s'} [\tilde{\max}\{u_c(\Phi c^A(a_m+d_k+y(s'), s')),\\
+    & u_c(\Phi c^N(a_m+y(s'), d_k, s'))\}|s_j]\\
+    \end{split}
+  \end{equation*}
+  \begin{equation*}
+    \begin{split}
+    FV_d(a_m,d_k,s_j) &= \mathbb{E}_{s'} [\tilde{\max}\{u_c(\Phi c^A(a_m+d_k+y(s'), s')),\\
+    & \Phi V^N_d(a_m+y(s'), d_k, s')\}|s_j]\\
+    \end{split}
+  \end{equation*}
+  \begin{equation*}
+    \begin{split}
+    CV(a_m,d_k,s_j) &= \mathbb{E}_{s'} [\tilde{\max}\{\Phi V^A(a_m+d_k+y(s'), s')),\\
+    & \Phi V^N(a_m+y(s'), d_k, s')\}|s_j]\\
+    \end{split}
+  \end{equation*}
+  and define associated interpolants $\Phi FV_a(a,d,s)$, $\Phi FV_d(a,d,s)$ and $CV(a,d,s)$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \footnotesize
+  - \textbf{Iteration t - Adjust case:}
+  \begin{itemize}
+    \item Define
+    \begin{equation*}
+      G^A_{EE}(a',d',x,s)=u_c(x-\kappa - q^aa' - q^dd')- \frac{\beta}{q^a}\Phi FV_a(a',d',s)
+    \end{equation*}
+    \begin{equation*}
+      G^A_{Port}(a',d',x,s)=u_c(x-\kappa - q^aa' - q^dd')- \frac{\beta}{q^d}\Phi FV_d(a',d',s)
+    \end{equation*}
+    \item For each $x_i$ and $s_j$ \ldots
+    \begin{enumerate}
+      \footnotesize
+      \item if $x_i-\kappa<0$, then $c^A(x_i,s_j)=\underline{c}$ and $V^A(x_i,s_j)=-\infty$
+    \end{enumerate}
+    \item \ldots otherwise consider the following cases:
+    \begin{enumerate}
+      \item if
+      \begin{equation*}
+        G^A_{EE}(0,0,x_i,s_j) > 0\text{, }G^A_{Port}(0,0,x_i,s_j) > 0
+      \end{equation*}
+      then store
+      \begin{equation*}
+        \hat{a}'=0\text{, }\hat{d}'=0\text{, }\hat{c} = x_i-\kappa\text{, }\hat{V}^A = u(\hat{c}) + \beta \Phi CV(0,0,s_j)
+      \end{equation*}
+      as a local solution
+    \end{enumerate}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \footnotesize
+  - \textbf{Iteration t - Adjust case (continued):}
+  \begin{itemize}
+    \begin{enumerate}
+      \setcounter{enumi}{1}
+      \footnotesize
+      \item if
+      \begin{equation*}
+        G^A_{EE}(0,\hat{d}',x_i,s_j) > 0\text{ where }\hat{d}': G^A_{Port}(0,\hat{d}',x_i,s_j)=0
+      \end{equation*}
+      then store
+      \begin{equation*}
+        \hat{a}'=0\text{, }\hat{d}'\text{, }\hat{c} = x_i-\kappa-q^d\hat{d}'\text{, }\hat{V}^A = u(\hat{c}) + \beta \Phi CV(0,\hat{d}',s_j)
+      \end{equation*}
+      as a local solution
+      \item if
+      \begin{equation*}
+        G^A_{Port}(\hat{a}',0,x_i,s_j)>0\text{ where }\hat{a}': G^A_{EE}(\hat{a}',0,x_i,s_j) = 0
+      \end{equation*}
+      then store
+      \begin{equation*}
+        \hat{a}'\text{, }\hat{d}'=0\text{, }\hat{c} = x_i-\kappa-q^a\hat{a}'\text{, }\hat{V}^A = u(\hat{c}) + \beta \Phi CV(\hat{a}',0,s_j)
+      \end{equation*}
+      as a local solution
+      \item look for local solution(s) of
+      \begin{equation*}
+        \begin{cases}
+          G^A_{EE}(\hat{a}',\hat{d}',x_i,s_j) = 0 \\
+          G^A_{Port}(\hat{a}',\hat{d}',x_i,s_j) = 0 \\
+        \end{cases}
+      \end{equation*}
+      and store them
+    \end{enumerate}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \footnotesize
+  - \textbf{Iteration t - Adjust case (continued):}
+  \begin{itemize}
+    \item Set $c^A(x_i,s_j)=c^*$ and $V^A(x_i,s_j)=V^{A*}$ where $(c^*, V^{A*})$ is the local solution with $V^{A*}>\hat{V}^A$ for all other $\hat{V}^A$
+  \end{itemize}
+  - \textbf{Iteration t - No-Adjust case:}
+  \begin{itemize}
+    \item Analogous, but remember to set
+    \begin{equation*}
+      V_d^N(x_i, d_k, s_j) = \frac{\beta}{q^d}\Phi FV_d(a^*,d^*,s_j)
+    \end{equation*}
+    after determining $V^{N*}$ among the local solutions
+  \end{itemize}
+  - Repeat all parts of \textbf{Iteration t} until convergence
+\end{frame}
+
+\subsection{EGM Algorithm}
+
+\begin{frame}
+  \frametitle{EGM Algorithm}
+  Described in Druedahl, J{\o}rgensen (2017)
+  \begin{itemize}
+    \item Faster than previous algorithm because it avoids root-finding
+    \item Main challenges (in addition to non-sufficiency of FOCs):
+      \begin{enumerate}
+        \item no simple algorithm for finding neighboring points in the multi-dimensional irregular grid (1d EGM: easy, bisection search)
+        \item no prior knowledge of where the constraints bind (1d EGM: all $a$ lower than endogenous asset level such that $a'=-\underline{a}$)
+      \end{enumerate}
+    \item In addition to extensive accuracy and speed comparisons, Druedahl and J{\o}rgensen define a broad class of models, in terms of sufficient and necessary conditions on model fundaments, where their method can be applied
+  \end{itemize}
+\end{frame}
+
+\section*{References}
+
+\begin{frame}
+  \frametitle{References}
+  \footnotesize
+  \medskip
+
+  Den Haan, Wouter J. "Comparison of solutions to the incomplete markets model with aggregate uncertainty." Journal of Economic Dynamics and Control 34.1 (2010): 4-27.
+  \medskip
+
+  Den Haan, Wouter J., and Albert Marcet. "Accuracy in simulations." The Review of Economic Studies 61.1 (1994): 3-17.
+  \medskip
+
+  Druedahl, Jeppe, and Thomas H{\o}gholm J{\o}rgensen. "A general endogenous grid method for multi-dimensional models with non-convexities and constraints." Journal of Economic Dynamics and Control 74 (2017): 87-107.
+  \medskip
+
+  Kaplan, Greg, and Giovanni L. Violante. "A model of the consumption response to fiscal stimulus payments." Econometrica 82.4 (2014): 1199-1239.
+  \medskip
+
+  Santos, Manuel S. "Accuracy of numerical solutions using the Euler equation residuals." Econometrica 68.6 (2000): 1377-1402.
+  \end{frame}
+
+
+\end{document}
+
+
+% \begin{frame}
+%   When adjusting illiquid asset $d$,
+%   \begin{equation*}
+%   V^A(\textcolor{red}{z}, s) = \max_{c, a', d'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(\textcolor{red}{a'+y(s')}, d', s')|s]\right\}
+%   \end{equation*}
+%   subject to
+%   \begin{equation*}
+%   c + q^aa' + q^dd' = \textcolor{red}{z} - \kappa\text{; }a'\geq 0 \text{; }d' \geq 0
+%   \end{equation*}
+%   When not adjusting,
+%   \begin{equation*}
+%   V^N(\textcolor{red}{x}, d, s) = \max_{c, a'}\left\{u\left(c\right) + \beta \mathbb{E}_{s'}[\mathbf{V}(\textcolor{red}{a'+y(s')}, d', s')|s]\right\}
+%   \end{equation*}
+%   subject to
+%   \begin{equation*}
+%   c + q^aa' = \textcolor{red}{x}\text{; }d' = \frac{d}{q^d}\text{; }a'\geq 0
+%   \end{equation*}
+%   where
+%   \begin{equation*}
+%     \mathbf{V}(\textcolor{red}{x}, d, s) = \max\left\{V^A(\textcolor{red}{x+d}, s), V^N(\textcolor{red}{x}, d, s)\right\}
+%   \end{equation*}
+% \end{frame}
