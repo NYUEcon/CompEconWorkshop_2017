@@ -102,13 +102,13 @@
       EE $\approx 0$ at nodes, but may be far from 0 outside of nodes
     \end{block}
     \begin{itemize}
-      \item   Define relative approximation error $\epsilon$ as value such that, at given point $(a,s)$ in state space, EE holds with equality
+      \item   Define relative approximation error $\eta$ as value such that, at given point $(a,s)$ in state space, EE holds with equality
         \begin{equation*}
-          u_c(c(a,s)(1-\epsilon)) = \beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]
+          u_c(c(a,s)(1-\eta)) = \beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]
         \end{equation*}
         Then Euler equation error is
         \begin{equation*}
-          \epsilon = 1-\frac{u_c^{-1}\left(\beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]\right)}{c(a,s)}
+          \eta = 1-\frac{u_c^{-1}\left(\beta R \mathbb{E}_{s'}[u_c(c(a'(a,s),s'))|s]\right)}{c(a,s)}
         \end{equation*}
   \end{itemize}
 \end{frame}
@@ -117,14 +117,14 @@
   \begin{block}{Interpretation}
   \begin{itemize}
     \item Error of 0.01 means agent makes a mistake equivalent to \$ 1 for each \$ 100 consumed in any period
-    \item Error in value function (i.e. implied cost in terms of agent's welfare) is of order of $\epsilon^2$ (Santos 2000)
+    \item Error in value function (i.e. implied cost in terms of agent's welfare) is of order of $\eta^2$ (Santos 2000)
   \end{itemize}
   \end{block}
 
   \begin{block}{Reporting}
     \begin{itemize}
       \item Long simulation, exclude states where agent is constrained, take maximum and average of errors in absolute value
-      \item Build fine grid for assets $\{\alpha_i\}_i$ (different than grid used for solution approximation), compute $\epsilon(\alpha_i,s_j)$ for all $i, j$ and plot
+      \item Build fine grid for assets $\{\alpha_i\}_i$ (different than grid used for solution approximation), compute $\eta(\alpha_i,s_j)$ for all $i, j$ and plot
       \item Usually reported in base 10 log (-2 means \$ 1 for each \$ 100). Acceptable average error $\leq -4$
     \end{itemize}
   \end{block}
@@ -171,7 +171,7 @@
     \begin{equation}\label{eq:uncorr}
       \mathbb{E}_t[\epsilon_{t+1} \mathbf{z}_t]=0
     \end{equation}
-    where $\mathbf{z}_t$ is vector of variables in known at $t$, e.g. $[\{y_j, c_j, a_j\}_{j=0}^{t}]$
+    where $\mathbf{z}_t$ is vector of variables known at $t$, e.g. $[\{y_j, c_j, a_j\}_{j=0}^{t}]$
     \begin{block}{Idea}
       A poor approximate solution does not satisfy this property
     \end{block}
@@ -388,7 +388,7 @@
   \end{equation*}
   \begin{equation*}
     \begin{split}
-    CV(a_m,d_k,s_j) &= \mathbb{E}_{s'} [\tilde{\max}\{\Phi V^A(a_m+d_k+y(s'), s')),\\
+    CV(a_m,d_k,s_j) &= \mathbb{E}_{s'} [\max\{\Phi V^A(a_m+d_k+y(s'), s')),\\
     & \Phi V^N(a_m+y(s'), d_k, s')\}|s_j]\\
     \end{split}
   \end{equation*}
